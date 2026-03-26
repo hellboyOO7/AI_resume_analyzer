@@ -4,6 +4,8 @@ const cors = require("cors");
 const analyzeRoutes = require("./src/routes/analyze.routes");
 
 const app = express();
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 const PORT = process.env.PORT;
 app.use(cors({
   origin: "*", // temporary for testing
