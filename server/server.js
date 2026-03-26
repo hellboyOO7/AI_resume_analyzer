@@ -6,8 +6,7 @@ const analyzeRoutes = require("./src/routes/analyze.routes");
 const app = express();
 const PORT = process.env.PORT;
 app.use(cors({
-  origin: "ai-resume-analyzer-ashen-sigma.vercel.app",
-  credentials: true
+  origin: "*", // temporary for testing
 }));
 app.use(express.json());
 
