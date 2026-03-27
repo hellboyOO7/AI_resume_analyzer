@@ -1,37 +1,56 @@
-const fs = require("fs");
+const fs = require("fs/promises");
 const pdfParse = require("pdf-parse");
 const { analyzeWithGroq } = require("../services/groqService");
 
-exports.analyzeResume = async (req, res) => {
+exports.analyzeResume = async (req, res, next) => {
+  let filePath;
+
   try {
-    const filePath = req.file.path;
-    const dataBuffer = fs.readFileSync(filePath);
-    const pdfData = await pdfParse(dataBuffer, {
-      max: 0,
-    });
+    // ✅ Validate file
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
 
-    const resumeText = pdfData.text;
+    filePath = req.file.path;
 
+    // ✅ Async read (non-blocking)
+    const dataBuffer = await fs.readFile(filePath);
+
+    const pdfData = await pdfParse(dataBuffer);
+    let resumeText = pdfData.text;
+
+    const cache = new Map();
+    const hash = resumeText.slice(0, 100);
+
+    if (cache.has(hash)) {
+      return res.json(cache.get(hash));
+    }
+
+    // ✅ Trim text (performance optimization)
+    resumeText = resumeText.slice(0, 3000);
+
+    // ✅ AI call
     const aiRawResponse = await analyzeWithGroq(resumeText);
 
-    // Remove markdown formatting if exists
-    const cleaned = aiRawResponse
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
+    // ✅ Safer JSON extraction
+    const jsonMatch = aiRawResponse.match(/\{[\s\S]*\}/);
 
-    const parsedResult = JSON.parse(cleaned);
+    if (!jsonMatch) {
+      throw new Error("Invalid AI response format");
+    }
 
-    // NORMALIZE SCORE HERE
+    const parsedResult = JSON.parse(jsonMatch[0]);
+    if (!parsedResult.skills || !Array.isArray(parsedResult.skills)) {
+      parsedResult.skills = [];
+    }
+
+    // ✅ Normalize score
     const rawScore = parsedResult.score || 0;
-
-    const finalScore =
+    parsedResult.score =
       rawScore <= 10 ? Math.round(rawScore * 10) : Math.round(rawScore);
-
-    parsedResult.score = finalScore; // overwrite score
-
-    // Delete uploaded file
-    fs.unlinkSync(filePath);
 
     res.status(200).json({
       success: true,
@@ -39,9 +58,15 @@ exports.analyzeResume = async (req, res) => {
     });
   } catch (error) {
     console.error("ERROR:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    next(error); // ✅ pass to global handler
+  } finally {
+    // ✅ ALWAYS delete file (even if error occurs)
+    if (filePath) {
+      try {
+        await fs.unlink(filePath);
+      } catch (err) {
+        console.warn("File cleanup failed:", err.message);
+      }
+    }
   }
 };
