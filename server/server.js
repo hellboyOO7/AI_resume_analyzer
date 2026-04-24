@@ -9,7 +9,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 const PORT = process.env.PORT || 5000;
 app.use(
   cors({
-    origin: "http://localhost:5174", // your frontend URL
+    origin: "https://ai-resume-analyzer-ashen-sigma.vercel.app",
     methods: ["GET", "POST"],
     credentials: true,
   }),
