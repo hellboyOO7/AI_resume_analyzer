@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
-const API_URL = "https://ai-blog-server-sigma-six.vercel.app";
+const API_URL = "https://ai-blog-qgw8.onrender.com";
 
 export default function App() {
   const [file, setFile] = useState(null);
