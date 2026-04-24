@@ -1,7 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 
-const API_URL = "https://ai-blog-qgw8.onrender.com";
+// const API_URL = "https://ai-resume-analyzer-1-f6gw.onrender.com";
+const API_URL = "http://localhost:7001";
 
 export default function App() {
   const [file, setFile] = useState(null);
