@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:7001";
+const API_URL = "https://ai-blog-server-sigma-six.vercel.app";
 
 export default function App() {
   const [file, setFile] = useState(null);
